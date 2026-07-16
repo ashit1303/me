@@ -216,6 +216,32 @@ function applyConfigToUI(config) {
   if (titleEl) titleEl.textContent = config.developer.title;
   if (bioEl) bioEl.textContent = config.developer.bio;
 
+  const avatarGlowEl = document.querySelector('.avatar-glow');
+  if (avatarGlowEl) {
+    avatarGlowEl.replaceChildren(); // Safe clearing of previous contents
+    const avatarVal = config.developer.avatar ? config.developer.avatar.trim() : '';
+    if (avatarVal) {
+      const isImage = avatarVal.includes('.') || avatarVal.startsWith('http') || avatarVal.startsWith('data:');
+      if (isImage) {
+        const img = document.createElement('img');
+        img.src = avatarVal;
+        img.alt = config.developer.name || 'Avatar';
+        img.className = 'avatar-image';
+        avatarGlowEl.appendChild(img);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'avatar-emoji';
+        span.textContent = avatarVal;
+        avatarGlowEl.appendChild(span);
+      }
+    } else {
+      const span = document.createElement('span');
+      span.className = 'avatar-emoji';
+      span.textContent = '🚀';
+      avatarGlowEl.appendChild(span);
+    }
+  }
+
   if (config.theme) {
     themeColors.high = parseInt(config.theme.highProficiencyColor.replace('#', '0x'));
     themeColors.medium = parseInt(config.theme.mediumProficiencyColor.replace('#', '0x'));
