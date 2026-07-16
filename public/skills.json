@@ -8,7 +8,7 @@
     },
     {
       "name": "Redis",
-      "category": "Backend",
+      "category": "Databases",
       "proficiency": "high",
       "description": "In-memory data structure store used as a database, cache, and message broker. Advanced usage in pub/sub patterns and caching strategies."
     },
@@ -17,6 +17,12 @@
       "category": "Architecture",
       "proficiency": "high",
       "description": "Designing distributed systems, service boundaries, inter-service communication (REST, gRPC, event-driven), and service registries."
+    },
+    {
+      "name": "Saga Pattern",
+      "category": "Architecture",
+      "proficiency": "high",
+      "description": "Designing distributed transactions in microservices architectures using choreography or orchestration approaches to maintain data consistency."
     },
     {
       "name": "Event Loop",
@@ -43,6 +49,12 @@
       "description": "Designing highly scalable, available, and fault-tolerant architectures. Load balancing, horizontal scaling, database sharding, and caching."
     },
     {
+      "name": "SOLID Principles",
+      "category": "Architecture",
+      "proficiency": "high",
+      "description": "Designing clean, modular, and maintainable software based on Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion principles."
+    },
+    {
       "name": "Data Structures",
       "category": "Computer Science",
       "proficiency": "high",
@@ -65,6 +77,12 @@
       "category": "Computer Science",
       "proficiency": "high",
       "description": "Relational model algebra, normalization theory (up to BCNF), transaction concurrency control, and crash recovery."
+    },
+    {
+      "name": "OOPs",
+      "category": "Computer Science",
+      "proficiency": "high",
+      "description": "Core Object-Oriented Programming principles including inheritance, polymorphism, encapsulation, abstraction, and object relationships."
     },
     {
       "name": "QuestDB",
@@ -103,15 +121,15 @@
       "description": "Redis-backed message queue for handling asynchronous jobs, rate-limiting, and background task processing in Node.js."
     },
     {
-      "name": "Financial Modeling",
-      "category": "Finance",
-      "proficiency": "medium",
-      "description": "Creating complex financial projections, cash flow analysis, discounted cash flow (DCF) models, and business valuations."
+      "name": "Payment Integrations",
+      "category": "Backend",
+      "proficiency": "high",
+      "description": "Integrating payment processors like PayPal, Pine Labs, CashFree and Razorpay, handling complex webhook flows, subscription lifecycles, and transaction security."
     },
     {
       "name": "Docker / Podman",
       "category": "DevOps",
-      "proficiency": "medium",
+      "proficiency": "low",
       "description": "Containerizing applications, writing optimized multi-stage Dockerfiles, managing container orchestration, and volume mounting."
     },
     {
@@ -123,7 +141,7 @@
     {
       "name": "MongoDB",
       "category": "Databases",
-      "proficiency": "medium",
+      "proficiency": "high",
       "description": "NoSQL document storage, schema design for high growth, aggregation pipelines, replica sets, and indexing strategies."
     },
     {
@@ -153,7 +171,7 @@
     {
       "name": "Go",
       "category": "Backend",
-      "proficiency": "medium",
+      "proficiency": "low",
       "description": "Statically typed compiled language used for writing lightweight microservices and low-overhead CLI tools."
     },
     {
@@ -163,9 +181,15 @@
       "description": "Running, scaling, and optimizing large language models (LLMs) locally, generating text and managing vector embeddings."
     },
     {
+      "name": "RAG",
+      "category": "AI & ML",
+      "proficiency": "medium",
+      "description": "Retrieval-Augmented Generation (RAG) is a technique that improves the accuracy and reliability of language models by grounding their responses in external knowledge bases."
+    },
+    {
       "name": "Liftbridge",
       "category": "Streaming & IoT",
-      "proficiency": "medium",
+      "proficiency": "low",
       "description": "Lightweight distributed message log providing queueing and streaming. Contributed porting patches for Termux/Android."
     },
     {
@@ -183,7 +207,7 @@
     {
       "name": "GraphQL",
       "category": "Backend",
-      "proficiency": "low",
+      "proficiency": "high",
       "description": "Designing schemas, writing resolvers, optimizing query execution, and integrating Apollo Client/Server."
     },
     {
@@ -195,25 +219,25 @@
     {
       "name": "WebSockets",
       "category": "Backend",
-      "proficiency": "low",
+      "proficiency": "medium",
       "description": "Implementing real-time bi-directional communication, socket connection management, heartbeat mechanisms, and scalability."
     },
     {
       "name": "Compiler Design",
       "category": "Computer Science",
-      "proficiency": "low",
+      "proficiency": "medium",
       "description": "Lexical analysis, parsing techniques (LL/LR parser construction), syntax-directed translation, and intermediate code generation."
     },
     {
       "name": "Microprocessors",
       "category": "Computer Science",
-      "proficiency": "low",
+      "proficiency": "medium",
       "description": "8085 architecture, instruction sets, memory/peripheral interfacing, assembly programming, and interrupts."
     },
     {
       "name": "Vector DB",
       "category": "Databases",
-      "proficiency": "low",
+      "proficiency": "medium",
       "description": "Specialized databases for storing and querying high-dimensional vector embeddings in AI/ML search applications."
     }
   ]
