@@ -52,26 +52,46 @@ function generateSunTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
+
   const ctx = canvas.getContext('2d');
+
   const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
-  grad.addColorStop(0, '#ffffee');
-  grad.addColorStop(0.15, '#ffee44');
-  grad.addColorStop(0.4, '#ffaa00');
-  grad.addColorStop(0.7, '#ff6600');
-  grad.addColorStop(1, '#cc3300');
+
+  // Brighter core
+  grad.addColorStop(0.00, '#ffffff');
+  grad.addColorStop(0.08, '#ffffff');
+  grad.addColorStop(0.22, '#fff9d8');
+  grad.addColorStop(0.45, '#ffe066');
+  grad.addColorStop(0.72, '#ff9900');
+  grad.addColorStop(0.92, '#ff5500');
+  grad.addColorStop(1.00, '#440000');
+
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 512, 512);
-  // Solar surface noise
-  for (let i = 0; i < 150; i++) {
+
+  // More visible solar surface
+  for (let i = 0; i < 350; i++) {
     const x = Math.random() * 512;
     const y = Math.random() * 512;
-    const r = 2 + Math.random() * 12;
+    const r = 3 + Math.random() * 16;
+
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, ${Math.floor(120 + Math.random() * 135)}, 0, ${0.08 + Math.random() * 0.15})`;
+
+    ctx.fillStyle = `rgba(
+      255,
+      ${220 + Math.floor(Math.random() * 35)},
+      ${20 + Math.floor(Math.random() * 40)},
+      ${0.15 + Math.random() * 0.25}
+    )`;
+
     ctx.fill();
   }
-  return new THREE.CanvasTexture(canvas);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+
+  return texture;
 }
 
 function generateMoonTexture() {
@@ -373,7 +393,7 @@ function setupWarpStars() {
     const z = (Math.random() - 0.5) * 250;
 
     // Head vertex (higher Y)
-    positions[i * 6]     = x;
+    positions[i * 6] = x;
     positions[i * 6 + 1] = y;
     positions[i * 6 + 2] = z;
 
@@ -645,27 +665,41 @@ function createExhaustParticle() {
 function setupCelestialBodies() {
   // ── Sun ──
   const sunTex = generateSunTexture();
-  const sunGeo = new THREE.IcosahedronGeometry(6, 3);
-  const sunMat = new THREE.MeshBasicMaterial({ map: sunTex });
+  const sunGeo = new THREE.IcosahedronGeometry(15, 3);
+  const sunMat = new THREE.MeshBasicMaterial({
+    map: sunTex,
+    color: new THREE.Color(0xffffff).multiplyScalar(4), // brighter
+    toneMapped: false
+  });
   const sun = new THREE.Mesh(sunGeo, sunMat);
-  sun.position.set(85, 40, -60);
+  sun.position.set(350, 350, -150);
   scene.add(sun);
 
-  // Sun corona glow
-  const coronaGeo = new THREE.SphereGeometry(9, 24, 24);
+  // Sun corona glow (Additive Blending for high intensity)
+  const coronaGeo = new THREE.SphereGeometry(32, 24, 24);
   const coronaMat = new THREE.MeshBasicMaterial({
-    color: 0xff8800, transparent: true, opacity: 0.08, side: THREE.BackSide
+    color: 0xffaa44, transparent: true, opacity: 0.2, side: THREE.BackSide, blending: THREE.AdditiveBlending
   });
   const corona = new THREE.Mesh(coronaGeo, coronaMat);
   corona.position.copy(sun.position);
   scene.add(corona);
 
+
+  // Outer flare glow layer
+  const flareGeo = new THREE.SphereGeometry(50, 24, 24);
+  const flareMat = new THREE.MeshBasicMaterial({
+    color: 0xff3300, transparent: true, opacity: 0.15, side: THREE.BackSide, blending: THREE.AdditiveBlending
+  });
+  const flare = new THREE.Mesh(flareGeo, flareMat);
+  flare.position.copy(sun.position);
+  scene.add(flare);
+
   // Sun light
-  const sunLight = new THREE.PointLight(0xffaa44, 1.0, 200);
+  const sunLight = new THREE.PointLight(0xffddaa, 3.0, 1000);
   sunLight.position.copy(sun.position);
   scene.add(sunLight);
 
-  celestialBodies.push({ mesh: sun, corona, type: 'sun', rotSpeed: 0.001 });
+  celestialBodies.push({ mesh: sun, corona, flare, type: 'sun', rotSpeed: 0.001 });
 
   // ── Moons ──
   const moonConfigs = [
@@ -686,53 +720,6 @@ function setupCelestialBodies() {
     celestialBodies.push({ mesh: moon, type: 'moon', rotSpeed: 0.002 + Math.random() * 0.003 });
   });
 
-  // ── Meteorites ──
-  const metTex = generateMeteoriteTexture();
-  for (let i = 0; i < 10; i++) {
-    const size = 0.3 + Math.random() * 1.2;
-    const geo = new THREE.IcosahedronGeometry(size, 1);
-    // Displace vertices for rocky look
-    const pos = geo.attributes.position;
-    for (let v = 0; v < pos.count; v++) {
-      const displacement = 0.65 + Math.random() * 0.7;
-      pos.setX(v, pos.getX(v) * displacement);
-      pos.setY(v, pos.getY(v) * displacement);
-      pos.setZ(v, pos.getZ(v) * displacement);
-    }
-    geo.computeVertexNormals();
-
-    const hasGlow = Math.random() > 0.6;
-    const mat = new THREE.MeshStandardMaterial({
-      map: metTex,
-      roughness: 0.9,
-      metalness: 0.15,
-      emissive: hasGlow ? new THREE.Color(0xff4400) : new THREE.Color(0x000000),
-      emissiveIntensity: hasGlow ? 0.15 : 0
-    });
-
-    const met = new THREE.Mesh(geo, mat);
-    // Place in the space between skill spheres and far away objects
-    const angle1 = Math.random() * Math.PI * 2;
-    const angle2 = Math.random() * Math.PI - Math.PI / 2;
-    const dist = 25 + Math.random() * 55;
-    met.position.set(
-      Math.cos(angle1) * Math.cos(angle2) * dist,
-      Math.sin(angle2) * dist,
-      Math.sin(angle1) * Math.cos(angle2) * dist
-    );
-    met.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-    scene.add(met);
-
-    celestialBodies.push({
-      mesh: met,
-      type: 'meteorite',
-      rotSpeed: new THREE.Vector3(
-        (Math.random() - 0.5) * 0.008,
-        (Math.random() - 0.5) * 0.008,
-        (Math.random() - 0.5) * 0.008
-      )
-    });
-  }
 
   // ── Galaxy Disc ──
   const galaxyTex = generateGalaxyTexture();
@@ -745,7 +732,7 @@ function setupCelestialBodies() {
   galaxy.position.set(-70, 60, -90);
   galaxy.rotation.set(Math.PI * 0.15, Math.PI * 0.3, 0);
   scene.add(galaxy);
-  celestialBodies.push({ mesh: galaxy, type: 'galaxy', rotSpeed: 0.0003 });
+  celestialBodies.push({ mesh: galaxy, type: 'galaxy', rotSpeed: 0.0013 });
 
   // Second smaller galaxy
   const galaxy2Tex = generateGalaxyTexture();
@@ -757,7 +744,7 @@ function setupCelestialBodies() {
   galaxy2.position.set(80, -30, -100);
   galaxy2.rotation.set(-Math.PI * 0.1, Math.PI * 0.6, Math.PI * 0.2);
   scene.add(galaxy2);
-  celestialBodies.push({ mesh: galaxy2, type: 'galaxy', rotSpeed: 0.0005 });
+  celestialBodies.push({ mesh: galaxy2, type: 'galaxy', rotSpeed: 0.005 });
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -809,11 +796,18 @@ function setupNebulaSkills() {
     else if (domProf === 'medium') { minR = 10; maxR = 18; }
     else { minR = 18; maxR = 28; }
 
-    const r = minR + Math.random() * (maxR - minR);
-    const theta = Math.random() * Math.PI * 2;
-    const x = r * Math.cos(theta);
-    const z = r * Math.sin(theta);
-    const y = -100 + Math.random() * 200; // -100 to +100
+    // Corridor ranges mapped to Z axis (depth) while keeping X near the center path
+    let minZ, maxZ;
+    if (domProf === 'high') { minZ = 8; maxZ = 13; }
+    else if (domProf === 'medium') { minZ = 13; maxZ = 20; }
+    else { minZ = 20; maxZ = 28; }
+
+    const x = (Math.random() - 0.5) * 16;
+    const zSign = Math.random() > 0.5 ? 1 : -1;
+    const z = zSign * (minZ + Math.random() * (maxZ - minZ));
+    const catKeys = Object.keys(categoriesMap);
+    const catIdx = catKeys.indexOf(cat);
+    const y = -100 + catIdx * (200 / catKeys.length);
 
     // Random vivid color (HSL)
     const h = Math.random();
@@ -898,6 +892,18 @@ function setupNebulaSkills() {
       planet.userData.labelElement = label;
     });
 
+    // Create Category tag (HTML Label) for Central Sun
+    const sunLabel = document.createElement('div');
+    sunLabel.setAttribute('class', 'node-label sun-label');
+    sunLabel.setAttribute('id', `sun-label-${cat.replace(/[^a-zA-Z0-9]/g, '_')}`);
+    sunLabel.textContent = cat;
+    const hexColor = '#' + color.getHexString();
+    sunLabel.style.borderColor = `${hexColor}66`;
+    sunLabel.style.boxShadow = `0 0 12px ${hexColor}44`;
+    sunLabel.style.color = hexColor;
+    if (labelContainer) labelContainer.appendChild(sunLabel);
+    sunMesh.userData.labelElement = sunLabel;
+
     solarSystems.push({
       group,
       category: cat,
@@ -908,7 +914,8 @@ function setupNebulaSkills() {
       sunMesh,
       corona,
       orbitLines,
-      planetMeshes
+      planetMeshes,
+      sunLabel
     });
   });
 
@@ -1277,21 +1284,65 @@ function animate() {
     // Respawn logic
     if (sys.group.position.y < -140) {
       sys.group.position.y = 140;
-      const r = sys.corridorRange.min + Math.random() * (sys.corridorRange.max - sys.corridorRange.min);
-      const theta = Math.random() * Math.PI * 2;
-      sys.group.position.x = r * Math.cos(theta);
-      sys.group.position.z = r * Math.sin(theta);
+      sys.group.position.x = (Math.random() - 0.5) * 16;
+
+      const zSign = Math.random() > 0.5 ? 1 : -1;
+      const minZ = sys.corridorRange.min;
+      const maxZ = sys.corridorRange.max;
+      sys.group.position.z = zSign * (minZ + Math.random() * (maxZ - minZ));
     }
+
+    // Distance-based fade logic
+    const sysWorldPos = new THREE.Vector3();
+    sys.group.getWorldPosition(sysWorldPos);
+    const distToCam = camera.position.distanceTo(sysWorldPos);
+
+    const maxDist = 45;
+    const minDist = 30;
+    let closeFactor = 0;
+    if (distToCam <= minDist) {
+      closeFactor = 1;
+    } else if (distToCam >= maxDist) {
+      closeFactor = 0;
+    } else {
+      closeFactor = 1 - (distToCam - minDist) / (maxDist - minDist);
+    }
+
+    const isMatch = (activeCategory === 'all' || sys.category === activeCategory);
+    const targetScale = isMatch ? 1.0 : 0.5;
+
+    // Category Suns always remain bright and opaque (shining)
+    sys.sunMesh.scale.setScalar(1.0);
+    sys.sunMesh.material.opacity = 0.95;
+    sys.sunMesh.material.transparent = false;
+
+    sys.corona.scale.setScalar(1.0);
+    sys.corona.material.opacity = 0.2;
+
+    // Animate orbit lines (fade in as system gets close)
+    sys.orbitLines.forEach(line => {
+      line.scale.setScalar(targetScale);
+      line.material.opacity = (isMatch ? 0.3 : 0.02) * closeFactor;
+    });
 
     // Animate planets orbiting the sun
     sys.planetMeshes.forEach(planet => {
       const data = planet.userData;
-      data.angle += data.orbitSpeed;
+      // Revolution speed scales with closeFactor (slower when far, normal speed when close)
+      data.angle += data.orbitSpeed * (0.15 + closeFactor * 0.85);
       planet.position.set(
         Math.cos(data.angle) * data.orbitRadius,
         0,
         Math.sin(data.angle) * data.orbitRadius
       );
+
+      // Planets fade in and scale up as they arrive closer
+      if (planet === hoveredNode || planet === selectedNode) {
+        planet.scale.setScalar(1.4);
+      } else {
+        planet.scale.setScalar(targetScale * closeFactor);
+      }
+      planet.material.opacity = (isMatch ? 0.95 : 0.12) * closeFactor;
     });
   });
 
@@ -1299,9 +1350,14 @@ function animate() {
   celestialBodies.forEach(body => {
     if (body.type === 'sun') {
       body.mesh.rotation.y += body.rotSpeed;
+      // Constant high intensity shimmer (no slow dimming)
       if (body.corona) {
-        body.corona.scale.setScalar(1 + Math.sin(elapsed * 0.5) * 0.04);
-        body.corona.material.opacity = 0.06 + Math.sin(elapsed * 0.8) * 0.02;
+        body.corona.scale.setScalar(1 + Math.sin(elapsed * 1.5) * 0.02);
+        body.corona.material.opacity = 0.22 + Math.sin(elapsed * 2.0) * 0.02;
+      }
+      if (body.flare) {
+        body.flare.scale.setScalar(1 + Math.sin(elapsed * 1.0) * 0.015);
+        body.flare.material.opacity = 0.14 + Math.sin(elapsed * 1.5) * 0.01;
       }
     } else if (body.type === 'moon') {
       body.mesh.rotation.y += body.rotSpeed;
@@ -1326,7 +1382,7 @@ function animate() {
   const intersects = raycaster.intersectObjects(allPlanets);
 
   if (hoveredNode) {
-    hoveredNode.scale.set(1, 1, 1);
+    hoveredNode.scale.set(1.4, 1.4, 1.4);
     if (hoveredNode.userData.labelElement) hoveredNode.userData.labelElement.classList.remove('hovered');
     document.body.style.cursor = 'default';
   }
@@ -1335,7 +1391,7 @@ function animate() {
     const node = intersects[0].object;
     if (activeCategory === 'all' || node.userData.skill.category === activeCategory) {
       hoveredNode = node;
-      hoveredNode.scale.set(1.5, 1.5, 1.5);
+      hoveredNode.scale.set(1.4, 1.4, 1.4);
       if (hoveredNode.userData.labelElement) hoveredNode.userData.labelElement.classList.add('hovered');
       document.body.style.cursor = 'pointer';
     } else {
@@ -1348,6 +1404,31 @@ function animate() {
   // ── 10. Project labels ──
   const tempV = new THREE.Vector3();
   solarSystems.forEach(sys => {
+    // Project Category Sun label
+    const sunNode = sys.sunMesh;
+    const sunLabel = sunNode.userData.labelElement;
+    if (sunLabel) {
+      sunNode.getWorldPosition(tempV);
+      const dist = camera.position.distanceTo(tempV);
+      tempV.project(camera);
+
+      const cx = (tempV.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
+      const cy = (tempV.y * -0.5 + 0.5) * renderer.domElement.clientHeight;
+      sunLabel.style.left = `${cx}px`;
+      sunLabel.style.top = `${cy}px`;
+
+      const isBehind = tempV.z > 1;
+      const inActive = (activeCategory !== 'all' && sys.category !== activeCategory);
+
+      // Sun category label: Visible when far (dist >= 30) and match, hidden when close (dist < 30)
+      if (isBehind || inActive || dist < 30 || dist > 120) {
+        sunLabel.classList.remove('visible');
+      } else {
+        sunLabel.classList.add('visible');
+      }
+    }
+
+    // Project Planet (skill) labels
     sys.planetMeshes.forEach(node => {
       const label = node.userData.labelElement;
       if (!label) return;
@@ -1364,9 +1445,10 @@ function animate() {
       const isBehind = tempV.z > 1;
       const inActive = (activeCategory !== 'all' && node.userData.skill.category !== activeCategory);
 
-      if (isBehind || inActive || dist > 40 || dist < 3) {
+      // Planet label: Visible when close (dist < 30) and match, hidden when far (dist >= 30)
+      if (isBehind || inActive || dist >= 30 || dist < 3) {
         label.classList.remove('visible');
-      } else if (dist < 30 || node === hoveredNode) {
+      } else if (dist < 28 || node === hoveredNode) {
         label.classList.add('visible');
       } else {
         label.classList.remove('visible');
