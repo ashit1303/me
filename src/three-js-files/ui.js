@@ -175,6 +175,7 @@ export function setupInteraction() {
   const closeBtn = document.getElementById('close-details-btn');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
+      shiftUniverseOnEscape();
       document.getElementById('details-card').classList.remove('visible');
       document.getElementById('details-card').classList.add('hidden');
       appState.selectedNode = null;
@@ -193,6 +194,7 @@ export function setupInteraction() {
   const escapeBtn = document.getElementById('escape-system-btn');
   if (escapeBtn) {
     escapeBtn.addEventListener('click', () => {
+      shiftUniverseOnEscape();
       document.getElementById('details-card').classList.remove('visible');
       document.getElementById('details-card').classList.add('hidden');
       appState.selectedNode = null;
@@ -245,6 +247,52 @@ export function updateSpeed(speed) {
   const display = document.getElementById('speed-value');
   if (display) {
     display.textContent = `${speed}x`;
+  }
+}
+
+export function shiftUniverseOnEscape() {
+  if (!appState.selectedSystem) return;
+
+  const offsetY = appState.selectedSystem.group.position.y;
+  if (offsetY === 0) return;
+
+  // 1. Shift all solar systems
+  appState.solarSystems.forEach(sys => {
+    sys.group.position.y -= offsetY;
+  });
+
+  // 2. Shift rocket position
+  if (appState.rocketGroup) {
+    appState.rocketGroup.position.y -= offsetY;
+  }
+
+  // 3. Shift camera and targets
+  if (appState.camera) {
+    appState.camera.position.y -= offsetY;
+  }
+  if (appState.cameraFollowTarget) {
+    appState.cameraFollowTarget.y -= offsetY;
+  }
+  if (appState.smoothedTarget) {
+    appState.smoothedTarget.y -= offsetY;
+  }
+
+  // 4. Shift comet particles
+  appState.cometParticles.forEach(p => {
+    if (p.mesh) {
+      p.mesh.position.y -= offsetY;
+    }
+  });
+
+  // 5. Shift background stars
+  if (appState.stars && appState.starPositions) {
+    for (let i = 0; i < appState.starCount; i++) {
+      const y1 = appState.starPositions.getY(i * 2);
+      const y2 = appState.starPositions.getY(i * 2 + 1);
+      appState.starPositions.setY(i * 2, y1 - offsetY);
+      appState.starPositions.setY(i * 2 + 1, y2 - offsetY);
+    }
+    appState.starPositions.needsUpdate = true;
   }
 }
 
@@ -361,6 +409,7 @@ export function onClick() {
     handleSelection(foundSys, clickedMesh);
   } else {
     if (appState.selectedSystem) {
+      shiftUniverseOnEscape();
       appState.selectedSystem = null;
       appState.rocketState = 'returning';
       document.getElementById('details-card').classList.remove('visible');
@@ -392,24 +441,19 @@ export function showSkillDetails(skill) {
   sCat.textContent = skill.category;
   sDesc.textContent = skill.description;
   let fillWidth = `${skill.percentage}%`;
-
+  let orbitDesc = skill.glossary
   let prof = skill.percentage > 75 ? 'high' : skill.percentage > 50 ? 'medium' : 'low';
   sProf.className = 'proficiency-badge';
-
-  let orbitDesc = skill.point;
 
   if (prof === 'high') {
     sProf.textContent = 'Expert Proficiency';
     sProf.classList.add('badge-high');
-    orbitDesc = 'Inner Sphere (Closest to rocket core)';
   } else if (prof === 'medium') {
     sProf.textContent = 'Moderate Proficiency';
     sProf.classList.add('badge-medium');
-    orbitDesc = 'Middle Sphere (Intermediate orbit)';
   } else {
     sProf.textContent = 'Basic Proficiency';
     sProf.classList.add('badge-low');
-    orbitDesc = 'Outer Sphere (Periphery orbit)';
   }
 
   sPercent.textContent = fillWidth;
