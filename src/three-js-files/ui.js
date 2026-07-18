@@ -123,10 +123,14 @@ export function setupInteraction() {
   container.addEventListener('mousemove', (e) => {
     const rect = container.getBoundingClientRect();
     appState.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    appState.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
   });
 
   let mouseDownPos = { x: 0, y: 0 };
   container.addEventListener('mousedown', (e) => {
+    const rect = container.getBoundingClientRect();
+    appState.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    appState.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     mouseDownPos = { x: e.clientX, y: e.clientY };
   });
 
@@ -378,8 +382,16 @@ export function onClick() {
   appState.raycaster.setFromCamera(appState.mouse, appState.camera);
   const allClickables = [];
   appState.solarSystems.forEach(sys => {
-    allClickables.push(...sys.planetMeshes, sys.sunMesh, sys.hitBox);
-    if (sys.corona) allClickables.push(sys.corona);
+    const isMatch = (appState.activeCategory === 'all' || sys.category === appState.activeCategory);
+    if (isMatch) {
+      allClickables.push(...sys.planetMeshes, sys.sunMesh);
+      if (sys.corona) allClickables.push(sys.corona);
+      
+      // Only include hitbox if system is not currently selected to allow click-away/escape
+      if (appState.selectedSystem !== sys) {
+        allClickables.push(sys.hitBox);
+      }
+    }
   });
   const intersects = appState.raycaster.intersectObjects(allClickables);
 
@@ -472,7 +484,10 @@ export function updateHover() {
   appState.raycaster.setFromCamera(appState.mouse, appState.camera);
   const allPlanets = [];
   appState.solarSystems.forEach(sys => {
-    allPlanets.push(...sys.planetMeshes);
+    const isMatch = (appState.activeCategory === 'all' || sys.category === appState.activeCategory);
+    if (isMatch) {
+      allPlanets.push(...sys.planetMeshes);
+    }
   });
   const intersects = appState.raycaster.intersectObjects(allPlanets);
 

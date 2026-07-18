@@ -142,8 +142,8 @@ export function setupNebulaSkills() {
     if (labelContainer) labelContainer.appendChild(sunLabel);
     sunMesh.userData.labelElement = sunLabel;
 
-    const maxOrbitRadius = sunRadius + 1.0 + Math.max(0, catSkills.length - 1) * 1.2;
-    const hitBoxGeo = new THREE.CylinderGeometry(maxOrbitRadius + 1, maxOrbitRadius + 1, 1, 32);
+    const hitBoxRadius = Math.max(sunRadius * 2.2, 4.0);
+    const hitBoxGeo = new THREE.SphereGeometry(hitBoxRadius, 16, 16);
     const hitBoxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
     const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
     group.add(hitBox);

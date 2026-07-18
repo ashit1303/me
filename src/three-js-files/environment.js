@@ -74,7 +74,7 @@ export function setupCelestialBodies() {
   sunLight.position.copy(sun.position);
   appState.scene.add(sunLight);
 
-  appState.celestialBodies.push({ mesh: sun, corona, flare, type: 'sun', rotSpeed: 0.001 });
+  appState.celestialBodies.push({ mesh: sun, corona, flare, type: 'sun', rotSpeed: 0.019 });
 
   const moonConfigs = [
     { pos: new THREE.Vector3(-45, -15, 35), size: 2.5 },
