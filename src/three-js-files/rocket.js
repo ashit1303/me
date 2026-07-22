@@ -6,83 +6,93 @@ export function setupRocket() {
   appState.flameGroup = new THREE.Group();
 
   const rocketCfg = appState.configData?.rocket || {};
-  const bodyColor = new THREE.Color(rocketCfg.bodyColor || '#ffffff');
-  const finColor = new THREE.Color(rocketCfg.finColor || '#ff3b70');
-  const windowColor = new THREE.Color(rocketCfg.windowColor || '#00ffd2');
+  const bodyColor = new THREE.Color(rocketCfg.bodyColor || '#ffffffff');
+  const finColor = new THREE.Color(rocketCfg.finColor || '#cc2233');
+  const windowColor = new THREE.Color(rocketCfg.windowColor || '#4499dd');
   const exhaustColorVal = new THREE.Color(rocketCfg.exhaustColor || '#ff6a00');
 
-  // ── Main Fuselage ──
-  const bodyGeo = new THREE.CylinderGeometry(0.55, 0.7, 3.2, 24);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.08, metalness: 0.95 });
+  // ── Main Fuselage (classic tapered cylinder) ──
+  const bodyGeo = new THREE.CylinderGeometry(0.5, 0.65, 3.2, 32);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.12, metalness: 0.85 });
   appState.rocketGroup.add(new THREE.Mesh(bodyGeo, bodyMat));
 
-  // ── Nose Cone ──
-  const noseGeo = new THREE.ConeGeometry(0.55, 1.6, 24);
+  // ── Nose Cone (red, pointed) ──
+  const noseGeo = new THREE.ConeGeometry(0.5, 1.8, 32);
   const noseMat = new THREE.MeshStandardMaterial({ color: finColor, roughness: 0.15, metalness: 0.7 });
   const nose = new THREE.Mesh(noseGeo, noseMat);
-  nose.position.y = 2.4;
+  nose.position.y = 2.5;
   appState.rocketGroup.add(nose);
 
-  // ── Antenna + Beacon ──
-  const antenna = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8),
-    new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.9 })
-  );
-  antenna.position.y = 3.6;
-  appState.rocketGroup.add(antenna);
+  // ── Red Stripe Bands ──
+  const stripeMat = new THREE.MeshStandardMaterial({ color: finColor, roughness: 0.15, metalness: 0.7 });
 
-  const beaconGeo = new THREE.SphereGeometry(0.07, 12, 12);
-  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1.0 });
-  const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-  beacon.position.y = 4.05;
-  appState.rocketGroup.add(beacon);
+  const stripe1 = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.045, 8, 32), stripeMat);
+  stripe1.position.y = 0.8;
+  stripe1.rotation.x = Math.PI / 2;
+  appState.rocketGroup.add(stripe1);
 
-  appState.beaconLight = new THREE.PointLight(0xff0000, 2.0, 5);
-  appState.beaconLight.position.y = 4.05;
-  appState.rocketGroup.add(appState.beaconLight);
+  const stripe2 = new THREE.Mesh(new THREE.TorusGeometry(0.61, 0.045, 8, 32), stripeMat);
+  stripe2.position.y = -0.6;
+  stripe2.rotation.x = Math.PI / 2;
+  appState.rocketGroup.add(stripe2);
 
-  // ── Cabin Window ──
+  // ── Cabin Window (single large blue porthole) ──
   const windowMat = new THREE.MeshStandardMaterial({
-    color: windowColor, emissive: windowColor, emissiveIntensity: 0.9, roughness: 0.05, metalness: 0.3
+    color: windowColor, emissive: windowColor, emissiveIntensity: 0.6,
+    roughness: 0.05, metalness: 0.3
   });
-  const cabinWindow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), windowMat);
-  cabinWindow.position.set(0, 0.7, 0.58);
+
+  // Window rim (silver ring)
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0xaaaabb, roughness: 0.2, metalness: 0.9 });
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 12, 24), rimMat);
+  rim.position.set(0, 0.2, 0.57);
+  appState.rocketGroup.add(rim);
+
+  // Window glass (blue disc)
+  const cabinWindow = new THREE.Mesh(new THREE.CircleGeometry(0.24, 24), windowMat);
+  cabinWindow.position.set(0, 0.2, 0.58);
   appState.rocketGroup.add(cabinWindow);
 
-  // Side windows
-  for (let i = -1; i <= 1; i += 2) {
-    const sw = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), windowMat.clone());
-    const angle = i * Math.PI * 0.35;
-    sw.position.set(Math.sin(angle) * 0.6, 0.7, Math.cos(angle) * 0.6);
-    appState.rocketGroup.add(sw);
-  }
+  // ── 3 Large Swept-Back Fins ──
+  const finShape = new THREE.Shape();
+  finShape.moveTo(0, 0);
+  finShape.lineTo(0, -1.2);
+  finShape.lineTo(0.85, -1.5);
+  finShape.lineTo(0.2, -0.5);
+  finShape.closePath();
 
-  // ── 4 Main Fins ──
-  const finGeo = new THREE.BoxGeometry(0.08, 1.2, 1.0);
+  const finGeo = new THREE.ExtrudeGeometry(finShape, {
+    depth: 0.08,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+    bevelSegments: 2
+  });
   const finMat = new THREE.MeshStandardMaterial({ color: finColor, roughness: 0.15, metalness: 0.8 });
-  for (let i = 0; i < 4; i++) {
+
+  for (let i = 0; i < 3; i++) {
     const fin = new THREE.Mesh(finGeo, finMat);
-    fin.position.y = -1.2;
-    const angle = (i * Math.PI) / 2;
-    fin.position.x = Math.cos(angle) * 0.72;
-    fin.position.z = Math.sin(angle) * 0.72;
+    const angle = (i * Math.PI * 2) / 3;
+    fin.position.y = -0.2;
+    fin.position.x = Math.cos(angle) * 0.6;
+    fin.position.z = Math.sin(angle) * 0.6;
     fin.rotation.y = -angle;
     appState.rocketGroup.add(fin);
   }
 
   // ── Main Nozzle ──
-  const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.4, metalness: 0.95 });
-  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.3, 0.5, 16), nozzleMat);
-  nozzle.position.y = -1.85;
+  const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.4, metalness: 0.95 });
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.25, 0.4, 16), nozzleMat);
+  nozzle.position.y = -1.8;
   appState.rocketGroup.add(nozzle);
 
   // ── Exhaust Ring (Glowing torus at nozzle mouth) ──
-  const exhaustRingGeo = new THREE.TorusGeometry(0.38, 0.05, 12, 32);
+  const exhaustRingGeo = new THREE.TorusGeometry(0.33, 0.04, 12, 32);
   const exhaustRingMat = new THREE.MeshBasicMaterial({
     color: exhaustColorVal, transparent: true, opacity: 0.85
   });
   const exhaustRing = new THREE.Mesh(exhaustRingGeo, exhaustRingMat);
-  exhaustRing.position.y = -2.1;
+  exhaustRing.position.y = -2.0;
   exhaustRing.rotation.x = Math.PI / 2;
   appState.rocketGroup.add(exhaustRing);
 
@@ -116,65 +126,6 @@ export function setupRocket() {
 
   appState.rocketGroup.add(appState.flameGroup);
 
-  // ── Side Boosters ──
-  const boosterGeo = new THREE.CylinderGeometry(0.22, 0.3, 2.0, 16);
-  const boosterMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.1, metalness: 0.9 });
-  const boosterNoseGeo = new THREE.ConeGeometry(0.22, 0.5, 16);
-
-  for (let side = -1; side <= 1; side += 2) {
-    const booster = new THREE.Mesh(boosterGeo, boosterMat);
-    booster.position.set(side * 1.1, -0.4, 0);
-    appState.rocketGroup.add(booster);
-
-    const boosterNose = new THREE.Mesh(boosterNoseGeo, noseMat);
-    boosterNose.position.set(side * 1.1, 0.75, 0);
-    appState.rocketGroup.add(boosterNose);
-
-    const bNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.14, 0.3, 12), nozzleMat);
-    bNozzle.position.set(side * 1.1, -1.55, 0);
-    appState.rocketGroup.add(bNozzle);
-
-    const bRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.17, 0.03, 8, 20),
-      new THREE.MeshBasicMaterial({ color: exhaustColorVal, transparent: true, opacity: 0.7 })
-    );
-    bRing.position.set(side * 1.1, -1.7, 0);
-    bRing.rotation.x = Math.PI / 2;
-    appState.rocketGroup.add(bRing);
-
-    const bInner = new THREE.Mesh(
-      new THREE.ConeGeometry(0.1, 0.8, 8, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0xffffcc, transparent: true, opacity: 0.75, side: THREE.DoubleSide })
-    );
-    bInner.position.set(side * 1.1, -2.1, 0);
-    bInner.rotation.x = Math.PI;
-    appState.flameGroup.add(bInner);
-
-    const bOuter = new THREE.Mesh(
-      new THREE.ConeGeometry(0.18, 1.4, 8, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3, side: THREE.DoubleSide })
-    );
-    bOuter.position.set(side * 1.1, -2.4, 0);
-    bOuter.rotation.x = Math.PI;
-    appState.flameGroup.add(bOuter);
-
-    for (let f = 0; f < 2; f++) {
-      const bFin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.5), finMat);
-      const fAngle = f === 0 ? 0 : Math.PI;
-      bFin.position.set(side * 1.1 + Math.cos(fAngle) * 0.3, -1.1, Math.sin(fAngle) * 0.3);
-      bFin.rotation.y = -fAngle;
-      appState.rocketGroup.add(bFin);
-    }
-  }
-
-  // ── Decorative body ring ──
-  const ringMat = new THREE.MeshStandardMaterial({
-    color: windowColor, emissive: windowColor, emissiveIntensity: 0.5, roughness: 0.1, metalness: 0.9
-  });
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.04, 8, 32), ringMat);
-  ring.rotation.x = Math.PI / 2;
-  appState.rocketGroup.add(ring);
-
   appState.rocketGroup.position.set(0, 0, 0);
   appState.scene.add(appState.rocketGroup);
 }
@@ -185,19 +136,15 @@ export function createExhaustParticle() {
   const rocketCfg = appState.configData?.rocket || {};
   const exhaustColor = new THREE.Color(rocketCfg.exhaustColor || '#ff6a00');
 
-  const spawnPoints = [
-    { x: 0, y: -2.2, z: 0, ringR: 0.3, spread: 0.2 },
-    { x: -1.1, y: -1.8, z: 0, ringR: 0.14, spread: 0.1 },
-    { x: 1.1, y: -1.8, z: 0, ringR: 0.14, spread: 0.1 }
-  ];
+  // Single main nozzle exhaust only (no side boosters)
+  const spawnPoint = { x: 0, y: -2.2, z: 0, ringR: 0.3, spread: 0.2 };
 
   for (let k = 0; k < count; k++) {
-    const sp = spawnPoints[k % spawnPoints.length];
     const size = 0.06 + Math.random() * 0.1;
     const geo = new THREE.SphereGeometry(size, 4, 4);
 
     const ringAngle = Math.random() * Math.PI * 2;
-    const ringOffset = sp.ringR * (0.5 + Math.random() * 0.5);
+    const ringOffset = spawnPoint.ringR * (0.5 + Math.random() * 0.5);
 
     const colorMix = Math.random();
     const particleColor = exhaustColor.clone();
@@ -208,9 +155,9 @@ export function createExhaustParticle() {
     const mesh = new THREE.Mesh(geo, mat);
 
     mesh.position.set(
-      sp.x + Math.cos(ringAngle) * ringOffset + (Math.random() - 0.5) * sp.spread,
-      sp.y,
-      sp.z + Math.sin(ringAngle) * ringOffset + (Math.random() - 0.5) * sp.spread
+      spawnPoint.x + Math.cos(ringAngle) * ringOffset + (Math.random() - 0.5) * spawnPoint.spread,
+      spawnPoint.y,
+      spawnPoint.z + Math.sin(ringAngle) * ringOffset + (Math.random() - 0.5) * spawnPoint.spread
     );
 
     const velocity = new THREE.Vector3(
@@ -225,16 +172,6 @@ export function createExhaustParticle() {
 }
 
 export function updateRocketAnimation(elapsed) {
-  if (appState.beaconLight) {
-    const blink = Math.sin(elapsed * 4.0) > 0.3 ? 1.0 : 0.0;
-    appState.beaconLight.intensity = blink * 2.5;
-    appState.rocketGroup.children.forEach(c => {
-      if (c.geometry && c.geometry.type === 'SphereGeometry' && Math.abs(c.position.y - 4.05) < 0.01) {
-        c.material.opacity = 0.3 + blink * 0.7;
-      }
-    });
-  }
-
   if (appState.rocketGroup) {
     if (appState.rocketState === 'idle') {
       appState.rocketGroup.position.x = 0;

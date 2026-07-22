@@ -82,7 +82,7 @@ function runBoardingAnimation(stage, visitorName, onComplete, introScreen, flash
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'launch-pad-svg');
   svg.setAttribute('viewBox', '0 0 600 450');
-  
+
   // Set responsive aspect ratio: use original centering on desktop; optimize on mobile
   const isPortrait = window.innerHeight > window.innerWidth;
   const isMobile = window.innerWidth < 1024;
@@ -363,159 +363,70 @@ function runBoardingAnimation(stage, visitorName, onComplete, introScreen, flash
     svg.appendChild(rock);
   });
 
-  // ── Rocket Group (matching 3D scene rocket - sitting on lunar surface) ──
+  // ── Rocket Group (classic cartoon style — no boosters, no antenna) ──
   const rocketGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   rocketGroup.setAttribute('class', 'rocket-vessel');
-  // Center X = 450, base Y = 360
-
-  // Landing legs (4 legs, showing 2 front-facing)
-  const legPositions = [
-    { x1: 435, y1: 345, x2: 415, y2: 365 },
-    { x1: 465, y1: 345, x2: 485, y2: 365 },
-    { x1: 440, y1: 345, x2: 425, y2: 362 },
-    { x1: 460, y1: 345, x2: 475, y2: 362 },
-  ];
-  legPositions.forEach(lp => {
-    const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    leg.setAttribute('x1', String(lp.x1));
-    leg.setAttribute('y1', String(lp.y1));
-    leg.setAttribute('x2', String(lp.x2));
-    leg.setAttribute('y2', String(lp.y2));
-    leg.setAttribute('stroke', '#8888aa');
-    leg.setAttribute('stroke-width', '2.5');
-    rocketGroup.appendChild(leg);
-  });
-
-  // Landing pads
-  [[412, 367], [488, 367], [422, 364], [478, 364]].forEach(([px, py]) => {
-    const pad = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    pad.setAttribute('cx', String(px));
-    pad.setAttribute('cy', String(py));
-    pad.setAttribute('rx', '7');
-    pad.setAttribute('ry', '2.5');
-    pad.setAttribute('fill', '#6e6e88');
-    rocketGroup.appendChild(pad);
-  });
-
-  // ── Side Boosters (left and right) ──
-  [-1, 1].forEach(side => {
-    const bx = 450 + side * 28; // booster center X
-
-    // Booster body (cylinder)
-    const boosterBody = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    boosterBody.setAttribute('x', String(bx - 7));
-    boosterBody.setAttribute('y', '220');
-    boosterBody.setAttribute('width', '14');
-    boosterBody.setAttribute('height', '120');
-    boosterBody.setAttribute('rx', '7');
-    boosterBody.setAttribute('fill', 'url(#rocket-body)');
-    rocketGroup.appendChild(boosterBody);
-
-    // Booster nose cone
-    const boosterNose = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    boosterNose.setAttribute('d', `M ${bx - 7} 220 Q ${bx} 195 ${bx + 7} 220 Z`);
-    boosterNose.setAttribute('fill', 'url(#rocket-nose)');
-    rocketGroup.appendChild(boosterNose);
-
-    // Booster flames (created first so they render behind the nozzle mouth)
-    const bFlameOuter = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    bFlameOuter.setAttribute('class', 'engine-flame');
-    bFlameOuter.setAttribute('d', `M ${bx - 3.5} 350 Q ${bx} 395 ${bx + 3.5} 350 Z`);
-    bFlameOuter.setAttribute('fill', '#ff6600');
-    bFlameOuter.setAttribute('opacity', '0.4');
-    bFlameOuter.setAttribute('filter', 'url(#neon-glow)');
-    bFlameOuter.style.transformOrigin = `${bx}px 350px`;
-    rocketGroup.appendChild(bFlameOuter);
-
-    const bFlameInner = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    bFlameInner.setAttribute('class', 'engine-flame');
-    bFlameInner.setAttribute('d', `M ${bx - 2} 350 Q ${bx} 380 ${bx + 2} 350 Z`);
-    bFlameInner.setAttribute('fill', '#ffffcc');
-    bFlameInner.setAttribute('opacity', '0.75');
-    bFlameInner.style.transformOrigin = `${bx}px 350px`;
-    rocketGroup.appendChild(bFlameInner);
-
-    // Booster nozzle (renders on top of flames to mask them correctly)
-    const bNozzle = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    bNozzle.setAttribute('d', `M ${bx - 6} 340 L ${bx - 4} 350 L ${bx + 4} 350 L ${bx + 6} 340 Z`);
-    bNozzle.setAttribute('fill', '#1a1a2e');
-    rocketGroup.appendChild(bNozzle);
-
-    // Booster exhaust ring
-    const bRing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    bRing.setAttribute('cx', String(bx));
-    bRing.setAttribute('cy', '350');
-    bRing.setAttribute('rx', '5');
-    bRing.setAttribute('ry', '2');
-    bRing.setAttribute('fill', 'none');
-    bRing.setAttribute('stroke', '#ff6a00');
-    bRing.setAttribute('stroke-width', '1.5');
-    bRing.setAttribute('opacity', '0.7');
-    rocketGroup.appendChild(bRing);
-
-    // Booster fins (2 per booster)
-    const bFinL = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    bFinL.setAttribute('d', `M ${bx - 7} 340 L ${bx - 14} 348 L ${bx - 7} 315 Z`);
-    bFinL.setAttribute('fill', '#ff3b70');
-    rocketGroup.appendChild(bFinL);
-
-    const bFinR = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    bFinR.setAttribute('d', `M ${bx + 7} 340 L ${bx + 14} 348 L ${bx + 7} 315 Z`);
-    bFinR.setAttribute('fill', '#ff3b70');
-    rocketGroup.appendChild(bFinR);
-  });
+  // Center X = 450
 
   // ── Main Engine Flames (hidden initially, shown on ignition) ──
   // Outer flame (red, wide)
   const flameOuter = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   flameOuter.setAttribute('class', 'engine-flame');
-  flameOuter.setAttribute('d', 'M 436 352 Q 450 430 464 352 Z');
+  flameOuter.setAttribute('d', 'M 434 348 Q 450 435 466 348 Z');
   flameOuter.setAttribute('fill', '#ff3300');
   flameOuter.setAttribute('opacity', '0.3');
   flameOuter.setAttribute('filter', 'url(#neon-glow)');
-  flameOuter.style.transformOrigin = '450px 352px';
+  flameOuter.style.transformOrigin = '450px 348px';
   rocketGroup.appendChild(flameOuter);
 
   // Mid flame (orange)
   const flameMid = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   flameMid.setAttribute('class', 'engine-flame');
-  flameMid.setAttribute('d', 'M 439 352 Q 450 415 461 352 Z');
+  flameMid.setAttribute('d', 'M 438 348 Q 450 418 462 348 Z');
   flameMid.setAttribute('fill', '#ff8800');
   flameMid.setAttribute('opacity', '0.55');
   flameMid.setAttribute('filter', 'url(#neon-glow)');
-  flameMid.style.transformOrigin = '450px 352px';
+  flameMid.style.transformOrigin = '450px 348px';
   rocketGroup.appendChild(flameMid);
 
   // Inner flame (white-hot core)
   const flameInner = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   flameInner.setAttribute('class', 'engine-flame');
-  flameInner.setAttribute('d', 'M 443 352 Q 450 400 457 352 Z');
-  flameInner.setAttribute('fill', '#ffffcc');
+  flameInner.setAttribute('d', 'M 442 348 Q 450 400 458 348 Z');
+  flameInner.setAttribute('fill', '#6c6c6aff');
   flameInner.setAttribute('opacity', '0.85');
-  flameInner.style.transformOrigin = '450px 352px';
+  flameInner.style.transformOrigin = '450px 348px';
   rocketGroup.appendChild(flameInner);
 
-  // ── 4 Main Fins (showing 2 front-facing) ──
-  const mainFinL = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  mainFinL.setAttribute('d', 'M 432 345 L 418 355 L 432 280 Z');
-  mainFinL.setAttribute('fill', '#ff3b70');
-  rocketGroup.appendChild(mainFinL);
+  // ── 3 Large Swept-Back Fins ──
+  // Left fin
+  const finL = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  finL.setAttribute('d', 'M 433 275 L 433 338 L 400 365 L 416 295 Z');
+  finL.setAttribute('fill', '#cc2233');
+  rocketGroup.appendChild(finL);
 
-  const mainFinR = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  mainFinR.setAttribute('d', 'M 468 345 L 482 355 L 468 280 Z');
-  mainFinR.setAttribute('fill', '#ff3b70');
-  rocketGroup.appendChild(mainFinR);
+  // Right fin
+  const finR = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  finR.setAttribute('d', 'M 467 275 L 467 338 L 500 365 L 484 295 Z');
+  finR.setAttribute('fill', '#cc2233');
+  rocketGroup.appendChild(finR);
+
+  // Center fin (behind body, partially visible at base)
+  const finC = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  finC.setAttribute('d', 'M 446 338 L 450 360 L 454 338 Z');
+  finC.setAttribute('fill', '#aa1a28');
+  rocketGroup.appendChild(finC);
 
   // ── Main Nozzle ──
   const nozzle = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  nozzle.setAttribute('d', 'M 437 340 L 434 352 L 466 352 L 463 340 Z');
-  nozzle.setAttribute('fill', '#1a1a2e');
+  nozzle.setAttribute('d', 'M 437 333 L 434 348 L 466 348 L 463 333 Z');
+  nozzle.setAttribute('fill', '#333344');
   rocketGroup.appendChild(nozzle);
 
   // Exhaust ring (glowing torus at nozzle mouth)
   const exhaustRing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
   exhaustRing.setAttribute('cx', '450');
-  exhaustRing.setAttribute('cy', '353');
+  exhaustRing.setAttribute('cy', '349');
   exhaustRing.setAttribute('rx', '14');
   exhaustRing.setAttribute('ry', '4');
   exhaustRing.setAttribute('fill', 'none');
@@ -524,102 +435,65 @@ function runBoardingAnimation(stage, visitorName, onComplete, introScreen, flash
   exhaustRing.setAttribute('opacity', '0.85');
   rocketGroup.appendChild(exhaustRing);
 
-  // ── Main Fuselage (tapered cylinder — wider at bottom, narrower at top) ──
+  // ── Main Fuselage (classic tapered body) ──
   const fuselage = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  fuselage.setAttribute('d', 'M 432 340 L 432 180 Q 432 170 438 170 L 462 170 Q 468 170 468 180 L 468 340 Z');
+  fuselage.setAttribute('d', 'M 433 335 L 435 180 Q 436 170 442 170 L 458 170 Q 464 170 465 180 L 467 335 Z');
   fuselage.setAttribute('fill', 'url(#rocket-body)');
   rocketGroup.appendChild(fuselage);
 
-  // ── Decorative Body Ring (cyan/green glow ring around body) ──
-  const bodyRing = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-  bodyRing.setAttribute('cx', '450');
-  bodyRing.setAttribute('cy', '260');
-  bodyRing.setAttribute('rx', '19');
-  bodyRing.setAttribute('ry', '4');
-  bodyRing.setAttribute('fill', 'none');
-  bodyRing.setAttribute('stroke', '#00ffd2');
-  bodyRing.setAttribute('stroke-width', '2');
-  bodyRing.setAttribute('opacity', '0.6');
-  bodyRing.setAttribute('filter', 'url(#soft-glow)');
-  rocketGroup.appendChild(bodyRing);
+  // ── Red Stripe Bands ──
+  // Upper stripe
+  const stripeUpper = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  stripeUpper.setAttribute('x', '434');
+  stripeUpper.setAttribute('y', '215');
+  stripeUpper.setAttribute('width', '32');
+  stripeUpper.setAttribute('height', '5');
+  stripeUpper.setAttribute('fill', '#cc2233');
+  rocketGroup.appendChild(stripeUpper);
 
-  // ── Nose Cone ──
+  // Lower stripe
+  const stripeLower = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  stripeLower.setAttribute('x', '433');
+  stripeLower.setAttribute('y', '300');
+  stripeLower.setAttribute('width', '34');
+  stripeLower.setAttribute('height', '5');
+  stripeLower.setAttribute('fill', '#cc2233');
+  rocketGroup.appendChild(stripeLower);
+
+  // ── Nose Cone (red, pointy — no antenna) ──
   const nose = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  nose.setAttribute('d', 'M 432 170 Q 450 100 468 170 Z');
+  nose.setAttribute('d', 'M 435 170 Q 450 80 465 170 Z');
   nose.setAttribute('fill', 'url(#rocket-nose)');
   rocketGroup.appendChild(nose);
 
-  // ── Antenna ──
-  const antenna = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  antenna.setAttribute('x1', '450');
-  antenna.setAttribute('y1', '100');
-  antenna.setAttribute('x2', '450');
-  antenna.setAttribute('y2', '72');
-  antenna.setAttribute('stroke', '#cccccc');
-  antenna.setAttribute('stroke-width', '1.5');
-  rocketGroup.appendChild(antenna);
+  // ── Cabin Window (single large blue porthole) ──
+  // Window rim (silver ring)
+  const windowRim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  windowRim.setAttribute('cx', '450');
+  windowRim.setAttribute('cy', '250');
+  windowRim.setAttribute('r', '14');
+  windowRim.setAttribute('fill', 'none');
+  windowRim.setAttribute('stroke', '#999999');
+  windowRim.setAttribute('stroke-width', '3');
+  rocketGroup.appendChild(windowRim);
 
-  // ── Beacon (blinking red) ──
-  const beacon = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  beacon.setAttribute('cx', '450');
-  beacon.setAttribute('cy', '70');
-  beacon.setAttribute('r', '3');
-  beacon.setAttribute('fill', '#ff0000');
-  beacon.setAttribute('class', 'beacon-blink');
-  beacon.setAttribute('filter', 'url(#soft-glow)');
-  rocketGroup.appendChild(beacon);
-
-  // ── Cabin Window (main, front-facing, #00ffd2 glow) ──
+  // Window glass (blue)
   const cabinWindow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   cabinWindow.setAttribute('cx', '450');
-  cabinWindow.setAttribute('cy', '210');
-  cabinWindow.setAttribute('r', '9');
-  cabinWindow.setAttribute('fill', '#0c0c24');
-  cabinWindow.setAttribute('stroke', '#00ffd2');
-  cabinWindow.setAttribute('stroke-width', '2');
+  cabinWindow.setAttribute('cy', '250');
+  cabinWindow.setAttribute('r', '12');
+  cabinWindow.setAttribute('fill', '#4499dd');
   rocketGroup.appendChild(cabinWindow);
 
-  // Cabin window inner glow
-  const cabinGlow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  cabinGlow.setAttribute('cx', '450');
-  cabinGlow.setAttribute('cy', '210');
-  cabinGlow.setAttribute('r', '9');
-  cabinGlow.setAttribute('fill', '#00ffd2');
-  cabinGlow.setAttribute('opacity', '0.2');
-  cabinGlow.setAttribute('filter', 'url(#soft-glow)');
-  rocketGroup.appendChild(cabinGlow);
-
-  // Side windows (2 smaller, flanking the main window)
-  [-1, 1].forEach(side => {
-    const sw = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    sw.setAttribute('cx', String(450 + side * 12));
-    sw.setAttribute('cy', '210');
-    sw.setAttribute('r', '5');
-    sw.setAttribute('fill', '#0c0c24');
-    sw.setAttribute('stroke', '#00ffd2');
-    sw.setAttribute('stroke-width', '1.5');
-    rocketGroup.appendChild(sw);
-
-    const swGlow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    swGlow.setAttribute('cx', String(450 + side * 12));
-    swGlow.setAttribute('cy', '210');
-    swGlow.setAttribute('r', '5');
-    swGlow.setAttribute('fill', '#00ffd2');
-    swGlow.setAttribute('opacity', '0.15');
-    rocketGroup.appendChild(swGlow);
-  });
-
-  // ── Hatch / Door (on the side, near base for boarding) ──
-  const hatch = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  hatch.setAttribute('x', '426');
-  hatch.setAttribute('y', '300');
-  hatch.setAttribute('width', '14');
-  hatch.setAttribute('height', '30');
-  hatch.setAttribute('rx', '4');
-  hatch.setAttribute('fill', '#0c0c24');
-  hatch.setAttribute('stroke', '#00f0ff');
-  hatch.setAttribute('stroke-width', '1.5');
-  rocketGroup.appendChild(hatch);
+  // Window highlight (reflection spot)
+  const windowHighlight = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  windowHighlight.setAttribute('cx', '446');
+  windowHighlight.setAttribute('cy', '246');
+  windowHighlight.setAttribute('rx', '4');
+  windowHighlight.setAttribute('ry', '6');
+  windowHighlight.setAttribute('fill', '#ffffff');
+  windowHighlight.setAttribute('opacity', '0.3');
+  rocketGroup.appendChild(windowHighlight);
 
   svg.appendChild(rocketGroup);
 
