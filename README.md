@@ -145,3 +145,23 @@ jobs:
    ```bash
    bun run deploy
    ```
+
+---
+
+## ☕ Support My Work
+
+If you like this project, you can support me:
+
+<a href="upi://pay?pa=kmr.ashit2@ybl&pn=ASHIT%20KUMAR" target="_blank">
+  <img 
+    src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" 
+    alt="Buy Me A Coffee" 
+    width="200"
+  />
+</a>
+
+### Or Scan
+<!--- Note: buy-me-a-coffee-qr-code.png has a built-in white background for easy scanning --->
+<a href="upi://pay?pa=kmr.ashit2@ybl&pn=ASHIT%20KUMAR" target="_blank">
+  <img src="buy-me-a-coffee-qr-code.png" alt="UPI QR Code" width="200" />
+</a>
